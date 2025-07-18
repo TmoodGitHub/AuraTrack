@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => (
   <Routes>
@@ -13,8 +14,22 @@ const App = () => (
     {/** Internal Routes */}
     <Route path='/' element={<Layout />}>
       <Route index element={<Navigate to='/dashboard' />} />
-      <Route path='/dashboard' element={<DashboardPage />} />
-      <Route path='/admin' element={<AdminPage />} />
+      <Route
+        path='/dashboard'
+        element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/admin'
+        element={
+          <ProtectedRoute requiredRole='admin'>
+            <AdminPage />
+          </ProtectedRoute>
+        }
+      />
     </Route>
 
     {/** Not Found */}

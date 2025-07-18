@@ -9,7 +9,7 @@ type User = {
 
 interface AuthContextType {
   user: User;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
 }
 
@@ -17,15 +17,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User>(null);
-  const login = async (email: string, password: string) => {
-    if (email === 'admin@example.com' && password === 'admin') {
-      setUser({ email, role: 'admin' });
-      return true;
-    } else if (email === 'user@example.com' && password === 'user') {
-      setUser({ email, role: 'user' });
-      return true;
+
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<User | null> => {
+    if (email === 'admin@example.com' && password === 'admin123') {
+      const newUser: User = { email, role: 'admin' };
+      setUser(newUser);
+      return newUser;
+    } else if (email === 'user@example.com' && password === 'user123') {
+      const newUser: User = { email, role: 'user' };
+      setUser(newUser);
+      return newUser;
     }
-    return false;
+    return null;
   };
 
   const logout = () => {

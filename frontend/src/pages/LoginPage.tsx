@@ -10,10 +10,9 @@ type LoginFormData = {
 };
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ react-hook-form setup
   const {
     register,
     handleSubmit,
@@ -22,14 +21,17 @@ const LoginPage = () => {
   } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
-    const success = await login(data.email, data.password);
+    const loggedInUser = await login(data.email, data.password);
 
-    if (success) {
-      navigate('/dashboard');
+    if (loggedInUser) {
+      if (loggedInUser.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
-      // ❌ Show generic error manually (or mark fields)
       setError('email', { message: 'Invalid credentials' });
-      setError('password', { message: ' ' }); // trigger red border
+      setError('password', { message: ' ' });
     }
   };
 
@@ -37,7 +39,6 @@ const LoginPage = () => {
     <div className='max-w-md mx-auto mt-16 p-4 border rounded shadow bg-white'>
       <h1 className='text-2xl font-bold mb-6 text-center'>Login</h1>
 
-      {/* ✅ Form */}
       <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
         <FloatingInput
           id='email'
