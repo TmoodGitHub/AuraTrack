@@ -5,36 +5,45 @@ import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './context/AuthContext';
 
-const App = () => (
-  <Routes>
-    {/** External Route */}
-    <Route path='/login' element={<LoginPage />} />
+const App = () => {
+  const { isAuthLoading } = useAuth();
 
-    {/** Internal Routes */}
-    <Route path='/' element={<Layout />}>
-      <Route index element={<Navigate to='/dashboard' />} />
-      <Route
-        path='/dashboard'
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path='/admin'
-        element={
-          <ProtectedRoute requiredRole='admin'>
-            <AdminPage />
-          </ProtectedRoute>
-        }
-      />
-    </Route>
+  if (isAuthLoading) {
+    return <div className='text-center mt-10 text-gray-600'>Loading...</div>;
+  }
 
-    {/** Not Found */}
-    <Route path='*' element={<NotFoundPage />} />
-  </Routes>
-);
+  return (
+    <Routes>
+      {/** External Route */}
+      <Route path='/login' element={<LoginPage />} />
+
+      {/** Internal Routes */}
+      <Route path='/' element={<Layout />}>
+        <Route index element={<Navigate to='/dashboard' />} />
+        <Route
+          path='/dashboard'
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/admin'
+          element={
+            <ProtectedRoute requiredRole='admin'>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+
+      {/** Not Found */}
+      <Route path='*' element={<NotFoundPage />} />
+    </Routes>
+  );
+};
 
 export default App;

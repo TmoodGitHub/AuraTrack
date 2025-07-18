@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 type UserRole = 'user' | 'admin';
@@ -9,6 +9,7 @@ type User = {
 
 interface AuthContextType {
   user: User;
+  isAuthLoading: boolean;
   login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
 }
@@ -17,29 +18,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('auth_user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setIsAuthLoading(false);
+  }, []);
 
   const login = async (
     email: string,
     password: string
   ): Promise<User | null> => {
+    let newUser: User | null = null;
+
     if (email === 'admin@example.com' && password === 'admin123') {
-      const newUser: User = { email, role: 'admin' };
-      setUser(newUser);
-      return newUser;
+      newUser = { email, role: 'admin' };
     } else if (email === 'user@example.com' && password === 'user123') {
-      const newUser: User = { email, role: 'user' };
-      setUser(newUser);
-      return newUser;
+      newUser = { email, role: 'user' };
     }
-    return null;
+
+    if (newUser) {
+      setUser(newUser);
+      localStorage.setItem('auth_user', JSON.stringify(newUser));
+    }
+
+    return newUser;
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('auth_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthLoading }}>
       {children}
     </AuthContext.Provider>
   );
