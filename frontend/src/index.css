@@ -25,4 +25,55 @@ body {
       transform: translateY(0);
     }
   }
+
+  .animate-shrink {
+    animation: shrinkAnim 0.3s ease-in-out;
+  }
+
+  .animate-wiggle {
+    animation: wiggleAnim 0.5s ease-in-out;
+  }
+
+  .animate-bounce-once {
+    animation: bounceOnce 0.4s ease-in-out;
+  }
+
+  .hover\\:animate-bounce-once:hover {
+    animation: bounceOnce 0.4s ease-in-out;
+  }
+
+  @keyframes shrinkAnim {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(0.7);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes wiggleAnim {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-10deg);
+    }
+    75% {
+      transform: rotate(10deg);
+    }
+  }
+
+  @keyframes bounceOnce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-25%);
+    }
+  }
 }
