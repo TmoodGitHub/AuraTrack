@@ -1,24 +1,5 @@
-import { gql } from 'apollo-server-express';
+// src/graphql/schema.ts
+import { metricsTypeDefs } from './typeDefs/metrics';
+import { authTypeDefs } from './typeDefs/auth';
 
-export const typeDefs = gql`
-  type Metric {
-    id: ID!
-    date: String!
-    sleepHours: Int
-    mood: Int
-    energy: Int
-  }
-
-  type Query {
-    getMetrics: [Metric!]!
-  }
-
-  type Mutation {
-    createMetric(
-      date: String!
-      sleepHours: Int
-      mood: Int
-      energy: Int
-    ): Metric!
-  }
-`;
+export const typeDefs = [metricsTypeDefs, authTypeDefs];
