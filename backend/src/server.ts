@@ -1,5 +1,6 @@
 import express, { Express } from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import { ApolloServer } from 'apollo-server-express';
 import { typeDefs } from './graphql/schema';
@@ -7,6 +8,7 @@ import { resolvers } from './graphql/resolvers';
 import authMiddleware from './middleware/auth';
 
 const app: Express = express();
+dotenv.config();
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
