@@ -6,15 +6,8 @@ import AccountPage from './pages/AccountPage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import { useAuth } from './context/AuthContext';
 
 const App = () => {
-  const { isAuthLoading } = useAuth();
-
-  if (isAuthLoading) {
-    return <div className='text-center mt-10 text-gray-600'>Loading...</div>;
-  }
-
   return (
     <Routes>
       {/** External Route */}

@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 import FloatingInput from '../components/FloatingInput';
 import FloatingPasswordInput from '../components/FloatingPasswordInput';
 
@@ -10,28 +12,43 @@ type LoginFormData = {
 };
 
 const LoginPage = () => {
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
+    clearErrors,
   } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
-    const loggedInUser = await login(data.email, data.password);
+    clearErrors();
+    setIsSubmitting(true);
 
-    if (loggedInUser) {
-      if (loggedInUser.role === 'admin') {
-        navigate('/admin');
+    try {
+      const user = await login(data.email, data.password);
+
+      if (user) {
+        if (user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        navigate('/dashboard');
+        setError('email', { message: 'Invalid credentials' });
+        setError('password', { message: ' ' });
+        toast.error(
+          'Login failed. Please check your credentials and try again.'
+        );
       }
-    } else {
-      setError('email', { message: 'Invalid credentials' });
-      setError('password', { message: ' ' });
+    } catch (error) {
+      console.error('Unexpected login error:', error);
+      toast.error('An unexpected error occurred. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
