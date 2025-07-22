@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useMutation } from '@apollo/client';
-import { LOGIN_MUTATION } from '../graphql/mutations';
+import { LOGIN_MUTATION, SIGNUP_MUTATION } from '../graphql/mutations';
 
 type UserRole = 'user' | 'admin';
 
@@ -14,6 +14,7 @@ type User = {
 interface AuthContextType {
   user: User;
   login: (email: string, password: string) => Promise<User | null>;
+  signup: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
 }
 
@@ -25,11 +26,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User>(() => {
-    const storedUser = localStorage.getItem('auth_user');
-    return storedUser ? (JSON.parse(storedUser) as User) : null;
+    try {
+      const storedUser = localStorage.getItem('auth_user');
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+      localStorage.removeItem('auth_user');
+      return null;
+    }
   });
   const [loginMutation] = useMutation(LOGIN_MUTATION);
+  const [signupMutation] = useMutation(SIGNUP_MUTATION);
 
+  /**
+   *
+   * Login a user using email and password
+   * Persist returning user info in context and localStorage
+   *
+   * @param email - user's email address
+   * @param password  - user's plaintext password
+   * @returns - the authenticated user object or null if failed
+   */
   const login = async (
     email: string,
     password: string
@@ -40,6 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         user: User;
         token: string;
       };
+
       if (newUser) {
         setUser(newUser);
         localStorage.setItem('auth_user', JSON.stringify(newUser));
@@ -52,6 +69,42 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  /**
+   *
+   * Sign up a new user with email, password
+   * Persist returning user info in context and localStorage
+   *
+   * @param email - user's email address
+   * @param password  - user's plaintext password
+   * @returns - newly created user object or null if failed
+   */
+  const signup = async (
+    email: string,
+    password: string
+  ): Promise<User | null> => {
+    try {
+      const { data } = await signupMutation({
+        variables: { email, password },
+      });
+      const { user: newUser } = data.signup as {
+        user: User;
+      };
+
+      if (newUser) {
+        setUser(newUser);
+        localStorage.setItem('auth_user', JSON.stringify(newUser));
+        return newUser;
+      }
+      return null;
+    } catch (error) {
+      console.error('Signup error:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Logout current user by clearing out both context and localStorage
+   */
   const logout = () => {
     setUser(null);
     localStorage.removeItem('auth_user');
@@ -62,9 +115,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     () => ({
       user,
       login,
+      signup,
       logout,
     }),
-    [user, login, logout]
+    [user, login, signup, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

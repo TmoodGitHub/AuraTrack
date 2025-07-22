@@ -1,8 +1,14 @@
 // src/graphql/resolvers.ts
-import { metricsResolvers } from './resolvers/metrics';
-import { authResolvers } from './resolvers/auth';
+import { metricsResolvers } from './resolvers/metricsResolvers';
+import { authResolvers } from './resolvers/authResolvers';
+import { adminResolvers } from './resolvers/adminResolvers';
+import { auditResolvers } from './resolvers/auditResolvers';
 
 export const resolvers = {
-  Query: { ...metricsResolvers.Query },
-  Mutation: { ...metricsResolvers.Mutation, ...authResolvers.Mutation },
+  Query: { ...metricsResolvers.Query, ...auditResolvers.Query },
+  Mutation: {
+    ...metricsResolvers.Mutation,
+    ...authResolvers.Mutation,
+    ...adminResolvers.Mutation,
+  },
 };

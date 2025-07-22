@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './layout/Layout';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import AccountPage from './pages/AccountPage';
 import AdminPage from './pages/AdminPage';
@@ -12,6 +13,7 @@ const App = () => {
     <Routes>
       {/** External Route */}
       <Route path='/login' element={<LoginPage />} />
+      <Route path='/signup' element={<SignupPage />} />
 
       {/** Internal Routes */}
       <Route path='/' element={<Layout />}>

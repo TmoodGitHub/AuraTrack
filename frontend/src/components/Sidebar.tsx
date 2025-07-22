@@ -1,4 +1,3 @@
-// Sidebar.tsx
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -19,7 +18,7 @@ interface Props {
 }
 
 const Sidebar = ({ isOpen, toggle, isCollapsed, setCollapsed }: Props) => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -82,20 +81,22 @@ const Sidebar = ({ isOpen, toggle, isCollapsed, setCollapsed }: Props) => {
               </span>
             </NavLink>
 
-            <NavLink
-              to='/admin'
-              end
-              className={({ isActive }) =>
-                isActive
-                  ? 'bg-blue-600 text-white font-semibold px-3 py-2 rounded flex items-center gap-2'
-                  : 'text-gray-700 hover:text-blue-500 px-3 py-2 rounded flex items-center gap-2'
-              }
-            >
-              <Shield size={18} />
-              <span className={`md:${isCollapsed ? 'hidden' : 'inline'}`}>
-                Admin Portal
-              </span>
-            </NavLink>
+            {user?.role === 'admin' && (
+              <NavLink
+                to='/admin'
+                end
+                className={({ isActive }) =>
+                  isActive
+                    ? 'bg-blue-600 text-white font-semibold px-3 py-2 rounded flex items-center gap-2'
+                    : 'text-gray-700 hover:text-blue-500 px-3 py-2 rounded flex items-center gap-2'
+                }
+              >
+                <Shield size={18} />
+                <span className={`md:${isCollapsed ? 'hidden' : 'inline'}`}>
+                  Admin Portal
+                </span>
+              </NavLink>
+            )}
 
             {/* Mobile Only: My Account */}
             <NavLink

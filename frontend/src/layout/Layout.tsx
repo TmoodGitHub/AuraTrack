@@ -1,10 +1,9 @@
 // Layout.tsx
 import { useEffect, useRef, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { User } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Layout = () => {
@@ -83,6 +82,17 @@ const Layout = () => {
                 >
                   My Account
                 </button>
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => {
+                      navigate('/admin');
+                      closeDropdown();
+                    }}
+                    className='w-full text-left px-4 py-2 text-sm hover:bg-gray-100'
+                  >
+                    Admin Portal
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className='w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100'

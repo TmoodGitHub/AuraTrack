@@ -6,6 +6,12 @@ export const authTypeDefs = gql`
     login(email: String!, password: String!): AuthPayload!
   }
 
+  extend type Mutation {
+    promoteUserToAdmin(userId: ID!): Boolean!
+    demoteAdminToUser(userId: ID!): Boolean!
+    deleteUser(userId: ID!): Boolean!
+  }
+
   type User {
     id: ID!
     email: String!

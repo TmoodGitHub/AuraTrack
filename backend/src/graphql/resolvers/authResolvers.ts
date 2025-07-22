@@ -19,10 +19,13 @@ export const authResolvers = {
       const user = await PostgresService.createUser({
         email,
         password: hashed,
-        role: 'user',
       });
 
-      const token = signToken({ id: user.id, role: user.role });
+      const token = signToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
 
       const days = parseInt(process.env.COOKIE_EXPIRES_IN || '90', 10);
       if (isNaN(days) || days < 0) {
@@ -49,7 +52,11 @@ export const authResolvers = {
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) throw new AuthenticationError('Invalid credentials');
 
-      const token = signToken({ id: user.id, role: user.role });
+      const token = signToken({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
 
       const days = parseInt(process.env.COOKIE_EXPIRES_IN || '90', 10);
       if (isNaN(days) || days < 0) {
