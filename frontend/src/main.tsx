@@ -5,7 +5,7 @@ import { ApolloProvider } from '@apollo/client';
 
 import './index.css';
 import App from './App.tsx';
-import client from './graphql/apolloClient.ts';
+import { client } from './graphql/apolloClient.ts';
 
 import { AuthProvider } from './context/AuthContext.tsx';
 import { Toaster } from 'react-hot-toast';
@@ -16,7 +16,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <AuthProvider>
           <>
-            <Toaster position='top-right' />
+            <Toaster position='bottom-right' />
             <App />
           </>
         </AuthProvider>

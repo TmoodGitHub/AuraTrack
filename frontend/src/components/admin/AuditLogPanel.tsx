@@ -1,139 +1,129 @@
 import { useState } from 'react';
-import { useQuery, gql } from '@apollo/client';
-import { format } from 'date-fns';
+import type { ChangeEvent } from 'react';
+import { useAuditLogs } from '../../hooks/useAuditLogs';
+import type { AuditLog } from '../../types/AuditLog';
+import { exportCSV } from '../../utils/exportCSV';
+import { Pagination } from './Pagination';
+import { AuditLogTable } from './AuditLogTable';
 
-const GET_AUDIT_LOGS = gql`
-  query GetAuditLogs($limit: Int, $offset: Int) {
-    getAuditLogs(limit: $limit, offset: $offset) {
-      id
-      timestamp
-      action
-      details
-      admin_id
-      admin_email
-      target_id
-      target_email
-    }
-  }
-`;
+import { AdminActionAnalytics } from './AdminActionAnalytics';
 
 const PAGE_SIZE = 25;
 
+type AuditActionType = 'PROMOTE_TO_ADMIN' | 'DEMOTE_TO_USER' | 'DELETE_USER';
+
 const AuditLogPanel = () => {
-  const [offset, setOffset] = useState(0);
-  const { data, loading, error, refetch } = useQuery(GET_AUDIT_LOGS, {
-    variables: { limit: PAGE_SIZE, offset },
-    fetchPolicy: 'cache-and-network',
+  // Updated to allow only "" or valid AuditActionType values
+  const [selectedAction, setSelectedAction] = useState<
+    AuditActionType | undefined
+  >(undefined);
+  const [selectedAdminEmail, setSelectedAdminEmail] = useState<string>('');
+  const [offset, setOffset] = useState<number>(0);
+
+  // Use custom hook for data fetching
+  const { logs, loading } = useAuditLogs({
+    limit: PAGE_SIZE,
+    offset,
+    // Only send `action` if it's not an empty string or undefined
+    action: selectedAction, // Omit `action` if empty
+    adminEmail: selectedAdminEmail || undefined,
   });
 
-  const logs = data?.getAuditLogs || [];
+  // Unique Admin Emails for filtering
+  const uniqueEmails = Array.from(
+    new Set(logs.map((log: AuditLog) => log.admin_email).filter(Boolean))
+  ) as string[];
+
   const isFirstPage = offset === 0;
   const hasNextPage = logs.length === PAGE_SIZE;
 
   const handlePrevious = () => {
-    if (!isFirstPage) {
-      setOffset(offset - PAGE_SIZE);
-    }
+    if (offset > 0) setOffset(offset - PAGE_SIZE);
   };
 
   const handleNext = () => {
-    if (hasNextPage) {
-      setOffset(offset + PAGE_SIZE);
-    }
+    if (hasNextPage) setOffset(offset + PAGE_SIZE);
+  };
+
+  const handleActionChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value === '' ? undefined : e.target.value;
+    setSelectedAction(value as AuditActionType | undefined);
+    setOffset(0);
+  };
+
+  const handleEmailChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedAdminEmail(e.target.value);
+    setOffset(0);
   };
 
   return (
     <div className='p-4 mt-6 bg-white rounded-xl shadow'>
       <h2 className='text-xl font-semibold mb-4'>Audit Log</h2>
 
-      <div className='overflow-x-auto'>
-        <table className='min-w-full border text-sm text-left border-gray-300'>
-          <thead className='bg-gray-100 border-b'>
-            <tr>
-              <th className='px-4 py-2 border-b'>Timestamp</th>
-              <th className='px-4 py-2 border-b'>Action</th>
-              <th className='px-4 py-2 border-b'>Admin</th>
-              <th className='px-4 py-2 border-b'>Target</th>
-              <th className='px-4 py-2 border-b'>Details</th>
-            </tr>
-          </thead>
+      {/* Action and Admin Email Filter */}
+      <div className='mb-4 flex gap-4 flex-wrap'>
+        <div>
+          <label className='block text-sm font-medium text-gray-700 mb-1'>
+            Action
+          </label>
+          <select
+            value={selectedAction}
+            onChange={handleActionChange}
+            className='border rounded px-2 py-1 text-sm'
+          >
+            <option value=''>All</option>
+            <option value='PROMOTE_TO_ADMIN'>Promote to Admin</option>
+            <option value='DEMOTE_TO_USER'>Demote to User</option>
+            <option value='DELETE_USER'>Delete User</option>
+          </select>
+        </div>
 
-          {loading ? (
-            <tbody>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className='animate-pulse border-b'>
-                  <td className='px-4 py-2'>
-                    <div className='h-4 bg-gray-200 rounded w-32' />
-                  </td>
-                  <td className='px-4 py-2'>
-                    <div className='h-4 bg-gray-200 rounded w-24' />
-                  </td>
-                  <td className='px-4 py-2'>
-                    <div className='h-4 bg-gray-200 rounded w-40' />
-                  </td>
-                  <td className='px-4 py-2'>
-                    <div className='h-4 bg-gray-200 rounded w-40' />
-                  </td>
-                  <td className='px-4 py-2'>
-                    <div className='h-4 bg-gray-200 rounded w-64' />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          ) : (
-            <tbody>
-              {logs.map((log: any) => (
-                <tr key={log.id} className='border-b'>
-                  <td className='px-4 py-2 border-b'>
-                    {format(
-                      new Date(Number(log.timestamp)),
-                      'yyyy-MM-dd HH:mm:ss'
-                    )}
-                  </td>
-                  <td className='px-4 py-2 border-b'>{log.action}</td>
-                  <td className='px-4 py-2 border-b'>
-                    {log.admin_email ?? '[deleted]'}
-                  </td>
-                  <td className='px-4 py-2 border-b'>
-                    {log.target_email ?? '[deleted]'}
-                  </td>
-                  <td className='px-4 py-2 border-b'>{log.details || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          )}
-        </table>
+        <div>
+          <label className='block text-sm font-medium text-gray-700 mb-1'>
+            Admin Email
+          </label>
+          <select
+            value={selectedAdminEmail}
+            onChange={handleEmailChange}
+            className='border rounded px-2 py-1 text-sm'
+          >
+            <option value=''>All</option>
+            {uniqueEmails.map((email) => (
+              <option key={email} value={email}>
+                {email}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {error && (
-        <p className='text-sm text-red-500'>Error loading audit logs</p>
-      )}
-
-      <div className='mt-4 flex justify-between items-center'>
-        <button
-          onClick={handlePrevious}
-          disabled={isFirstPage}
-          className={`px-4 py-2 rounded bg-gray-200 text-sm ${
-            isFirstPage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-300'
-          }`}
-        >
-          Previous
-        </button>
-
-        <span className='text-sm text-gray-600'>
-          Page {offset / PAGE_SIZE + 1}
-        </span>
+      {/* Displaying Loading or Error Messages */}
+      <div className='flex items-center justify-between mb-2'>
+        {loading ? <p>Loading...</p> : <p>Total Logs: {logs.length}</p>}
 
         <button
-          onClick={handleNext}
-          disabled={!hasNextPage}
-          className={`px-4 py-2 rounded bg-gray-200 text-sm ${
-            hasNextPage ? 'hover:bg-gray-300' : 'opacity-50 cursor-not-allowed'
-          }`}
+          onClick={() => exportCSV(selectedAction, selectedAdminEmail)}
+          className='text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700'
         >
-          Next
+          Export CSV
         </button>
       </div>
+
+      {/* Table of Audit Logs */}
+      <AuditLogTable logs={logs} loading={loading} />
+
+      {/* Pagination */}
+      <Pagination
+        isFirstPage={isFirstPage}
+        hasNextPage={hasNextPage}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        offset={offset}
+        PAGE_SIZE={PAGE_SIZE}
+      />
+
+      {/* Admin Action Analytics - Display this below the table and pagination */}
+      <AdminActionAnalytics logs={logs} />
     </div>
   );
 };

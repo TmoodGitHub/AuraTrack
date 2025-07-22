@@ -9,11 +9,11 @@ export const metricsTypeDefs = gql`
     energy: Int
   }
 
-  type Query {
+  extend type Query {
     getMetrics: [Metric!]!
   }
 
-  type Mutation {
+  extend type Mutation {
     createMetric(
       date: String!
       sleepHours: Int

@@ -1,7 +1,10 @@
 import { createContext, useContext, useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useMutation } from '@apollo/client';
-import { LOGIN_MUTATION, SIGNUP_MUTATION } from '../graphql/mutations';
+import {
+  LOGIN_MUTATION,
+  SIGNUP_MUTATION,
+} from '../graphql/mutations/userMutations.graphql';
 
 type UserRole = 'user' | 'admin';
 

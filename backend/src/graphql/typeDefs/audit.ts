@@ -18,7 +18,25 @@ export const auditTypeDefs = gql`
     details: String
   }
 
-  type Query {
-    getAuditLogs(limit: Int = 25, offset: Int = 0): [AuditLogEntry!]!
+  type AdminActionSummary {
+    admin_email: String!
+    PROMOTE_TO_ADMIN: Int!
+    DEMOTE_TO_USER: Int!
+    DELETE_USER: Int!
+  }
+
+  extend type Query {
+    getAuditLogs(
+      limit: Int
+      offset: Int
+      action: AuditActionType
+      adminEmail: String
+    ): [AuditLogEntry!]!
+
+    getAuditLogCount(action: AuditActionType, adminEmail: String): Int!
+
+    exportAuditLogs(action: AuditActionType, adminEmail: String): String!
+
+    getAuditActionCountsPerAdmin: [AdminActionSummary!]!
   }
 `;

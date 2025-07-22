@@ -3,14 +3,14 @@ import { forwardRef, type InputHTMLAttributes, type ForwardedRef } from 'react';
 type FloatingInputProps = {
   label: string;
   id: string;
-  error?: string;
-} & InputHTMLAttributes<HTMLInputElement>;
+  error?: string; // error is optional and a string if it exists
+} & InputHTMLAttributes<HTMLInputElement>; // This allows us to pass other props to the input
 
 const FloatingInput = (
   { label, id, error, ...rest }: FloatingInputProps,
   ref: ForwardedRef<HTMLInputElement>
 ) => {
-  const errorId = `${id}-error`;
+  const errorId = `${id}-error`; // Unique id for error message, useful for aria-describedby
 
   return (
     <div className='relative z-0 w-full group'>
@@ -18,8 +18,8 @@ const FloatingInput = (
         id={id}
         name={id}
         placeholder=' '
-        aria-invalid={!!error}
-        aria-describedby={error ? errorId : undefined}
+        aria-invalid={!!error} // If there is an error, aria-invalid will be true
+        aria-describedby={error ? errorId : undefined} // Associates error message with the input
         className={`block px-2.5 pb-2.5 pt-4 w-full text-sm bg-transparent rounded-lg border appearance-none focus:outline-none focus:ring-0 peer
           ${
             error
@@ -28,7 +28,7 @@ const FloatingInput = (
           }
         `}
         ref={ref}
-        {...rest}
+        {...rest} // Spread other props like {...register()}
       />
 
       <label
@@ -46,6 +46,7 @@ const FloatingInput = (
         {label}
       </label>
 
+      {/* Display error message if it exists */}
       {error && (
         <p id={errorId} className='mt-1 text-sm text-red-600'>
           {error}
