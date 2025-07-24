@@ -1,14 +1,23 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+const envPath = path.resolve(
+  process.cwd(),
+  process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
+);
+dotenv.config({ path: envPath });
+
+import { initPostgresPool } from './services/postgresService';
+initPostgresPool();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import { ApolloServer } from 'apollo-server-express';
 import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 import { typeDefs } from './graphql/schema';
 import { resolvers } from './graphql/resolvers';
 import authMiddleware from './middleware/auth';
-
-dotenv.config();
 
 const app = express();
 

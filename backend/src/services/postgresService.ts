@@ -1,17 +1,33 @@
 import { Pool } from 'pg';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 // Configure PostgreSQL connection pool using explicit PG_* env vars
-const pool = new Pool({
-  host: process.env.PG_HOST,
-  port: Number(process.env.PG_PORT),
-  database: process.env.PG_DATABASE,
-  user: process.env.PG_USER,
-  password: process.env.PG_PASSWORD,
-  ssl: process.env.NODE_ENV === 'production',
-});
+let pool: Pool;
+
+export const initPostgresPool = (): void => {
+  if (!process.env.PG_USER) {
+    throw new Error(
+      'PG_USER not set. .env.development or .env.production not loaded yet.'
+    );
+  }
+
+  pool = new Pool({
+    host: process.env.PG_HOST,
+    port: Number(process.env.PG_PORT),
+    database: process.env.PG_DATABASE,
+    user: process.env.PG_USER,
+    password: process.env.PG_PASSWORD,
+    ssl: process.env.NODE_ENV === 'production',
+  });
+};
+
+export const getPool = (): Pool => {
+  if (!pool) {
+    throw new Error(
+      'Postgres pool not initalized. Call initPostgresPool() first.'
+    );
+  }
+  return pool;
+};
 
 // Define TypeScript interfaces for clarity
 export interface MetricRecord {
@@ -311,7 +327,6 @@ export class PostgresService {
   static async getUserCount(): Promise<number> {
     const sql = 'SELECT COUNT(*) FROM users';
     const { rows } = await pool.query(sql);
-    console.log('rows:', rows);
     return parseInt(rows[0].count, 10);
   }
 

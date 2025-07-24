@@ -30,7 +30,6 @@ export const adminResolvers = {
       }
 
       try {
-        console.log('calling getUserCount...');
         const count = PostgresService.getUserCount();
         // Ensure that count is always a valid number
         return count || 0; // If the count is invalid, return 0
@@ -148,7 +147,6 @@ export const adminResolvers = {
           role,
         });
 
-        console.log('newUser:', newUser);
         if (newUser) {
           return newUser; // Return the created user to the client
         } else {

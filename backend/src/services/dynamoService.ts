@@ -1,16 +1,9 @@
-// src/services/dynamoService.ts
-
-// 1. Load .env first, so DYNAMO_LOCAL, AWS_* etc are set
-import dotenv from 'dotenv';
-dotenv.config();
-
 import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   PutCommand,
   QueryCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
 
 const isLocal = process.env.DYNAMO_LOCAL === 'true';
 
