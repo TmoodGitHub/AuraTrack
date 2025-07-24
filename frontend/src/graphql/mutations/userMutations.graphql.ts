@@ -44,9 +44,7 @@ export const DEMOTE_USER_MUTATION = gql`
 
 export const DELETE_USER_MUTATION = gql`
   mutation DeleteUser($userId: ID!) {
-    deleteUser(userId: $userId) {
-      id
-    }
+    deleteUser(userId: $userId)
   }
 `;
 

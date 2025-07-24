@@ -1,4 +1,7 @@
-import { AuthenticationError, UserInputError } from 'apollo-server-express';
+import {
+  AuthenticationError,
+  UserInputError,
+} from 'apollo-server-express';
 import { PostgresService } from '../../services/postgresService';
 
 export const adminResolvers = {
@@ -15,7 +18,10 @@ export const adminResolvers = {
 
       try {
         // Fetch users with pagination
-        const users = await PostgresService.getUsers(limit, offset); // Modify the PostgresService to support this
+        const users = await PostgresService.getUsers(
+          limit,
+          offset
+        ); // Modify the PostgresService to support this
         return users;
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -34,7 +40,10 @@ export const adminResolvers = {
         // Ensure that count is always a valid number
         return count || 0; // If the count is invalid, return 0
       } catch (error) {
-        console.error('Error resolve fetching user count:', error);
+        console.error(
+          'Error resolve fetching user count:',
+          error
+        );
         return 0; // Return 0 if there's an error
       }
     },
@@ -51,10 +60,14 @@ export const adminResolvers = {
       }
 
       if (context.user.id === userId) {
-        throw new UserInputError('Admins cannot promote themselves');
+        throw new UserInputError(
+          'Admins cannot promote themselves'
+        );
       }
 
-      const updatedUser = await PostgresService.promoteUser(userId); // Ensure you return the updated user here
+      const updatedUser = await PostgresService.promoteUser(
+        userId
+      ); // Ensure you return the updated user here
 
       await PostgresService.logAuditAction({
         adminId: context.user.id,
@@ -76,15 +89,22 @@ export const adminResolvers = {
       }
 
       if (context.user.id === userId) {
-        throw new UserInputError('Admins cannot demote themselves');
+        throw new UserInputError(
+          'Admins cannot demote themselves'
+        );
       }
 
-      const isMasterAdmin = await PostgresService.isMasterAdmin(userId);
+      const isMasterAdmin =
+        await PostgresService.isMasterAdmin(userId);
       if (isMasterAdmin) {
-        throw new UserInputError('Cannot demote master admin');
+        throw new UserInputError(
+          'Cannot demote master admin'
+        );
       }
 
-      const updatedUser = await PostgresService.demoteUser(userId); // Ensure you return the updated user here
+      const updatedUser = await PostgresService.demoteUser(
+        userId
+      ); // Ensure you return the updated user here
 
       await PostgresService.logAuditAction({
         adminId: context.user.id,
@@ -106,12 +126,17 @@ export const adminResolvers = {
       }
 
       if (context.user.id === userId) {
-        throw new UserInputError('Admins cannot delete themselves');
+        throw new UserInputError(
+          'Admins cannot delete themselves'
+        );
       }
 
-      const isMasterAdmin = await PostgresService.isMasterAdmin(userId);
+      const isMasterAdmin =
+        await PostgresService.isMasterAdmin(userId);
       if (isMasterAdmin) {
-        throw new UserInputError('Cannot delete master admin');
+        throw new UserInputError(
+          'Cannot delete master admin'
+        );
       }
 
       await PostgresService.logAuditAction({
@@ -121,9 +146,9 @@ export const adminResolvers = {
         details: `Admin ${context.user.email} (${context.user.id}) deleted user ${userId}`,
       });
 
-      const deletedUser = await PostgresService.deleteUser(userId); // Ensure you return the deleted user here
+      await PostgresService.deleteUser(userId); // Ensure you return the deleted user here
 
-      return deletedUser; // Return the deleted user data here
+      return true; // Return the deleted user data here
     },
 
     createUser: async (
@@ -141,11 +166,14 @@ export const adminResolvers = {
 
       try {
         // Ensure the user is created and returned from PostgresService
-        const newUser = await PostgresService.createUser({
-          email,
-          password,
-          role,
-        });
+        const newUser = await PostgresService.createUser(
+          {
+            email,
+            password,
+            role,
+          },
+          true
+        );
 
         if (newUser) {
           return newUser; // Return the created user to the client

@@ -53,15 +53,31 @@ export class PostgresService {
   /**
    * Log a metric into the metrics_log table
    */
-  static async logMetric(metric: MetricRecord): Promise<void> {
-    const { id, userId, timestamp, mood, energy, sleepHours } = metric;
+  static async logMetric(
+    metric: MetricRecord
+  ): Promise<void> {
+    const {
+      id,
+      userId,
+      timestamp,
+      mood,
+      energy,
+      sleepHours,
+    } = metric;
     const sql = `
       INSERT INTO metrics_log
         (id, user_id, timestamp, mood, energy, sleep_hours)
       VALUES
         ($1, $2, $3, $4, $5, $6)
     `;
-    await pool.query(sql, [id, userId, timestamp, mood, energy, sleepHours]);
+    await pool.query(sql, [
+      id,
+      userId,
+      timestamp,
+      mood,
+      energy,
+      sleepHours,
+    ]);
   }
 
   /**
@@ -70,7 +86,11 @@ export class PostgresService {
    * @param isAdmin - Flag to determine if this is an admin creating a user
    */
   static async createUser(
-    input: { email: string; password: string; role?: string },
+    input: {
+      email: string;
+      password: string;
+      role?: string;
+    },
     isAdmin: boolean = false
   ): Promise<UserRecord> {
     const { email, password, role } = input;
@@ -84,14 +104,20 @@ export class PostgresService {
     RETURNING id, email, password, role
   `;
 
-    const { rows } = await pool.query(sql, [email, password, userRole]);
+    const { rows } = await pool.query(sql, [
+      email,
+      password,
+      userRole,
+    ]);
     return rows[0];
   }
 
   /**
    * Find a user by their email address
    */
-  static async findUserByEmail(email: string): Promise<UserRecord | null> {
+  static async findUserByEmail(
+    email: string
+  ): Promise<UserRecord | null> {
     const sql = `
       SELECT id, email, password, role
       FROM users
@@ -106,7 +132,10 @@ export class PostgresService {
    */
   static async logAuditAction(input: {
     adminId: string;
-    action: 'PROMOTE_TO_ADMIN' | 'DELETE_USER' | 'DEMOTE_TO_USER';
+    action:
+      | 'PROMOTE_TO_ADMIN'
+      | 'DELETE_USER'
+      | 'DEMOTE_TO_USER';
     targetId: string;
     details?: string;
   }): Promise<void> {
@@ -115,7 +144,12 @@ export class PostgresService {
     const sql = `
       INSERT INTO audit_log (admin_id, action, target_id, details) VALUES ($1, $2, $3, $4)
     `;
-    await pool.query(sql, [adminId, action, targetId, details ?? null]);
+    await pool.query(sql, [
+      adminId,
+      action,
+      targetId,
+      details ?? null,
+    ]);
   }
 
   /**
@@ -130,7 +164,10 @@ export class PostgresService {
     {
       id: string;
       timestamp: string;
-      action: 'PROMOTE_TO_ADMIN' | 'DELETE_USER' | 'DEMOTE_TO_USER';
+      action:
+        | 'PROMOTE_TO_ADMIN'
+        | 'DELETE_USER'
+        | 'DEMOTE_TO_USER';
       details: string | null;
       admin_id: string;
       admin_email: string | null;
@@ -202,7 +239,9 @@ export class PostgresService {
    * @param userId - UUID of the user to check
    * @returns boolean - true if master admin, false otherwise
    */
-  static async isMasterAdmin(userId: string): Promise<boolean> {
+  static async isMasterAdmin(
+    userId: string
+  ): Promise<boolean> {
     const sql = `SELECT email FROM users WHERE id = $1`;
     const { rows } = await pool.query(sql, [userId]);
     if (rows.length === 0) return false;
@@ -257,7 +296,10 @@ export class PostgresService {
     {
       id: string;
       timestamp: string;
-      action: 'PROMOTE_TO_ADMIN' | 'DELETE_USER' | 'DEMOTE_TO_USER';
+      action:
+        | 'PROMOTE_TO_ADMIN'
+        | 'DELETE_USER'
+        | 'DEMOTE_TO_USER';
       details: string | null;
       admin_email: string | null;
       target_email: string | null;
@@ -332,16 +374,29 @@ export class PostgresService {
 
   /**
    * Get a list of users with pagination.
+   * Pin master admin (admin@auratrack.io) to the top
+   * Admins are listed above users
+   * Sort by alphabetical order of email for each group
    * @param limit - Number of users to fetch
    * @param offset - Number of users to skip
    * @returns {Promise<UserRecord[]>} List of users
    */
-  static async getUsers(limit: number, offset: number): Promise<UserRecord[]> {
+  static async getUsers(
+    limit: number,
+    offset: number
+  ): Promise<UserRecord[]> {
     const sql = `
-      SELECT id, email, role
-      FROM users
-      LIMIT $1 OFFSET $2
-    `;
+    SELECT id, email, role
+    FROM users
+    ORDER BY 
+      CASE 
+        WHEN email = 'admin@auratrack.io' THEN 0
+        WHEN role = 'admin' THEN 1
+        ELSE 2
+      END,
+      email ASC
+    LIMIT $1 OFFSET $2;
+  `;
     const { rows } = await pool.query(sql, [limit, offset]);
     return rows;
   }

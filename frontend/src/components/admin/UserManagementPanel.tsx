@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@apollo/client';
-import { GET_USERS, GET_USER_COUNT } from '../../graphql/queries/userQueries';
+import { useQuery, useApolloClient } from '@apollo/client';
+import {
+  GET_USERS,
+  GET_USER_COUNT,
+} from '../../graphql/queries/userQueries';
 import { useUserManagement } from '../../hooks/useUserManagement';
 import { UserTable } from './UserTable';
 import { UserForm } from './UserForm';
@@ -14,14 +17,24 @@ const UserManagementPanel = () => {
   const [userCount, setUserCount] = useState(0);
   const [offset, setOffset] = useState<number>(0);
 
-  const { loading: usersLoading, data } = useQuery(GET_USERS, {
-    variables: { limit: PAGE_SIZE, offset },
-  });
+  const client = useApolloClient();
 
-  const { loading: countLoading, data: countData } = useQuery(GET_USER_COUNT);
+  const { loading: usersLoading, data } = useQuery(
+    GET_USERS,
+    {
+      variables: { limit: PAGE_SIZE, offset },
+    }
+  );
 
-  const { handlePromote, handleDemote, handleDelete, handleCreate } =
-    useUserManagement();
+  const { loading: countLoading, data: countData } =
+    useQuery(GET_USER_COUNT);
+
+  const {
+    handlePromote,
+    handleDemote,
+    handleDelete,
+    handleCreate,
+  } = useUserManagement();
 
   // Fetch users data and update state
   useEffect(() => {
@@ -37,7 +50,6 @@ const UserManagementPanel = () => {
     }
   }, [countData]);
 
-  const isFirstPage = offset === 0;
   const hasNextPage = users.length === PAGE_SIZE;
 
   const handlePrevious = () => {
@@ -48,6 +60,10 @@ const UserManagementPanel = () => {
     if (hasNextPage) setOffset(offset + PAGE_SIZE);
   };
 
+  const handlePageClick = (pageNum: number) => {
+    setOffset((pageNum - 1) * PAGE_SIZE);
+  };
+
   const isLoading = usersLoading || countLoading;
 
   const handleCreateUser = async (
@@ -56,9 +72,13 @@ const UserManagementPanel = () => {
     role: string
   ) => {
     try {
-      const user = await handleCreate(email, password, role);
+      const user = await handleCreate(
+        email,
+        password,
+        role
+      );
       if (user) {
-        setUsers((prevUsers) => [user, ...prevUsers]);
+        await refreshUserTable();
         setUserCount((prevCount) => prevCount + 1); // Increment user count
         setOffset(0); // Reset pagination
         toast.success('User created successfully!');
@@ -71,11 +91,22 @@ const UserManagementPanel = () => {
     }
   };
 
+  const refreshUserTable = async () => {
+    await client.refetchQueries({
+      include: [GET_USERS, GET_USER_COUNT],
+    });
+  };
+
   return (
     <div className='p-4 mt-6 bg-white rounded-xl shadow'>
-      <h2 className='text-xl font-semibold mb-4'>User Management</h2>
+      <h2 className='text-xl font-semibold mb-4'>
+        User Management
+      </h2>
 
-      <UserForm isAdminPortal={true} onSubmit={handleCreateUser} />
+      <UserForm
+        isAdminPortal={true}
+        onSubmit={handleCreateUser}
+      />
 
       {countLoading && <p>Loading user count...</p>}
       {usersLoading && <p>Loading users...</p>}
@@ -85,18 +116,23 @@ const UserManagementPanel = () => {
         loading={isLoading}
         onPromote={handlePromote}
         onDemote={handleDemote}
-        onDelete={handleDelete}
-        setUsers={setUsers} // Make sure to update the user list optimistically
-        userCount={userCount}
+        onDelete={async (userId: string) => {
+          const success = await handleDelete(userId);
+          if (success) {
+            await refreshUserTable();
+          }
+        }}
+        setUsers={setUsers}
+        setUserCount={setUserCount}
       />
 
       <Pagination
-        isFirstPage={isFirstPage}
-        hasNextPage={hasNextPage}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
         offset={offset}
         PAGE_SIZE={PAGE_SIZE}
+        totalItems={userCount}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onPageClick={handlePageClick}
       />
 
       {/* Display total user count */}
